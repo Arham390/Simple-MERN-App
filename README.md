@@ -24,10 +24,9 @@ Backend:
 # Installation
 To run the app you need to have Node.js installed and follow these steps:
 1. Download the repository locally or clone it:
-2. 
-   ```
-git clone https://github.com/Kuzma02/Simple-MERN-App.git
-   ```
+
+
+``` git clone https://github.com/Kuzma02/Simple-MERN-App.git ```
 
 2. Open terminal in the repository folder:
 
