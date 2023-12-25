@@ -1,5 +1,8 @@
 # Simple MERN CRUD Application
 
+![simple mern app](https://github.com/Kuzma02/Simple-MERN-App/assets/138793624/2c8d3cea-905a-4b52-aecf-0f9324a4c017)
+
+
 # Description
 This project is a full-stack web application built using the MERN stack (MongoDB, Express, React, Node.js). It offers complete Create, Read, Update, and Delete (CRUD) functionality, allowing users to add, view, update, and delete entries seamlessly. The application is 
 designed to manage user information, providing an interactive and responsive user interface.
