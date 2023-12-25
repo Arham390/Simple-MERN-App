@@ -50,7 +50,7 @@ npm install
 ```
 
 5. Configure MongoDB:
-Ensure MongoDB is installed and running on your machine.
+Create account on MongoDB, create database and put MONGO_URI in .env file.
 Create a .env file in the root directory and add your MongoDB URI:
 
 ```
