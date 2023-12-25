@@ -24,33 +24,46 @@ Backend:
 # Installation
 To run the app you need to have Node.js installed and follow these steps:
 1. Download the repository locally or clone it:
+2. 
    ```
 git clone https://github.com/Kuzma02/Simple-MERN-App.git
    ```
+
 2. Open terminal in the repository folder:
+
 ```
 cd folder-name
 ```
+
 3. Install backend dependencies
+
 ```
 npm install
 ```
+
 4. Install frontend dependencies:
+
 ```
 cd client
 npm install
 ```
+
 5. Configure MongoDB:
 Ensure MongoDB is installed and running on your machine.
 Create a .env file in the root directory and add your MongoDB URI:
+
 ```
 MONGO_URI=your_mongodb_uri
 ```
+
 6. Run the application:
+
 ```
 node app.js
 ```
+
 7. In a new terminal, start the frontend:
+
 ```
 cd client
 npm run dev
