@@ -1,5 +1,7 @@
 # Simple MERN Stack CRUD Application
 
+![simple crud application](https://github.com/Kuzma02/Simple-MERN-App/assets/138793624/273df777-8a2c-4b48-aca3-db4f57c5b220)
+
 Welcome to this comprehensive MERN CRUD project, a full-stack web application meticulously crafted using the robust MERN stack (MongoDB, Express, React, Node.js). This repository is a treasure trove of learning and development that not only serves as a MERN application
 example but also provides a step-by-step MERN CRUD app tutorial.
 
