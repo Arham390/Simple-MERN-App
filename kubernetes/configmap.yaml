@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mern-app-config
+data:
+  mongodb-uri: "mongodb://mongodb-service:27017/mern-app"
+  NODE_ENV: "production"
