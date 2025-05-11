@@ -66,8 +66,9 @@ jobs:
       run: terraform validate
 
     - name: Terraform Plan (Dry Run Infra Check)
+      run: terraform plan -var="public_key=${{ secrets.EC2_PUBLIC_KEY }}"
       working-directory: terraform
-      run: terraform plan
+
 
   deploy:
     needs: [build, terraform]
@@ -96,3 +97,5 @@ jobs:
         EOF
 
         rm ec2_key.pem
+
+   

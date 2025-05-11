@@ -155,9 +155,10 @@ resource "aws_iam_instance_profile" "ec2_profile" {
 
 # Key pair for SSH access
 resource "aws_key_pair" "mern_key_pair" {
-  key_name   = "${var.project_name}-key"
-  public_key = file("C:/Users/dell/.ssh/id_rsa.pub")
+  key_name   = "mern_key_pair"
+  public_key = var.public_key
 }
+
 
 
 # EC2 Instance for MongoDB
