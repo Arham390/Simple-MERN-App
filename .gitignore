@@ -1,38 +1,65 @@
 # Node modules (both client & server)
 node_modules/
 
-# Environment variables
-.env
-.env.*  # Optional: in case you use .env.production or .env.development
+# Build output
+build/
+dist/
+.next/
+out/
 
 # Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
-# OS / IDE files
+# Environment files
+.env
+.env.*    # .env.production, .env.development, etc.
+
+# OS generated files
 .DS_Store
 Thumbs.db
+
+# Vim/Swap/Lock files
 *.swp
 *.swo
+*.lock
 
-# Build directories
-build/
-dist/
-
-# React
-*.local
-*.cache/
+# Coverage & test output
 coverage/
+*.lcov
+*.lcov.info
 
-# VSCode settings
+# IDE settings
 .vscode/
+.idea/
+*.iml
 
-# Optional uploads or temp files
-uploads/
+# Babel & cache
+.cache/
+.cache-loader/
 tmp/
+temp/
+
+# Uploads or user-generated content
+uploads/
 *.log
 
+# Terraform
 terraform/.terraform/
-terraform/*.tfstate*
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/.terraform.lock.hcl
+terraform/crash.log
+terraform/terraform.tfvars
+terraform/terraform.tfvars.json
+terraform/.terraform.tfstate.backup
 
+# Misc
+*.tgz
+*.gz
+*.zip
+
+# TypeScript
+*.tsbuildinfo
