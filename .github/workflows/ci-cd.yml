@@ -68,7 +68,25 @@ jobs:
     - name: Terraform Plan (Dry Run Infra Check)
       run: terraform plan -var="public_key=${{ secrets.EC2_PUBLIC_KEY }}"
       working-directory: terraform
-
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: ${{ secrets.AWS_REGION }}
+        TF_VAR_aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        TF_VAR_aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        TF_VAR_aws_region: ${{ secrets.AWS_REGION }}
+        TF_VAR_public_key: ${{ secrets.EC2_PUBLIC_KEY }}
+        TF_VAR_private_key: ${{ secrets.EC2_PRIVATE_KEY }}
+        TF_VAR_instance_type: t2.micro
+        TF_VAR_ami: ami-0c55b159cbfafe1f0 # Amazon Linux 2 AMI (HVM), SSD Volume Type
+        TF_VAR_key_name: ${{ secrets.EC2_KEY_NAME }}
+        TF_VAR_security_group: ${{ secrets.EC2_SECURITY_GROUP }}
+        TF_VAR_subnet_id: ${{ secrets.EC2_SUBNET_ID }}
+        TF_VAR_vpc_id: ${{ secrets.EC2_VPC_ID }}
+        TF_VAR_instance_count: 1
+        TF_VAR_instance_name: mern-app-instance
+        TF_VAR_instance_ami: ami-0c55b159cbfafe1f0 # Amazon Linux 2 AMI (HVM), SSD Volume Type
+        
 
   deploy:
     needs: [build, terraform]
