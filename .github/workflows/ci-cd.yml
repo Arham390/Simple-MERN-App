@@ -106,7 +106,14 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
         run: |
-          echo "${EC2_SSH_KEY}" > ec2_key.pem
+          echo "-----BEGIN OPENSSH PRIVATE KEY-----
+          >> b3BlbnNzaC1rZXktdjEAAAAACmFlczI1Ni1jdHIAAAAGYmNyeXB0AAAAGAAAABDZOmYRqh
+          >> aEXw8dHtMuMJB7AAAAGAAAAAEAAAAzAAAAC3NzaC1lZDI1NTE5AAAAIJLsBmjN6G+kfWis
+          >> R1qsHq5yI+VMVQKw/1g3AkoTouU3AAAAkLgFQuzndFFkRYL4oYBxoU9vsblq0mIfUQZbWh
+          >> wLYId31NRQikcjGMiygFjZm+DNQLALKrgb2HuoDbDHXyyuSvjcikxYc+qfrifLk0ERRZjh
+          >> +NsEpXAbk9SbLvLMyDuQI7H8P9Pu7B4ck1HPAp8u1WB9sFBodpabt6oVHBBfe4CjmBDZcw
+          >> by/bHQAKRjP4Pu2A==
+          >> -----END OPENSSH PRIVATE KEY-----" > ec2_key.pem
           chmod 400 ec2_key.pem
 
           ssh -o StrictHostKeyChecking=no -i ec2_key.pem "$EC2_USER@$EC2_HOST" << EOF
