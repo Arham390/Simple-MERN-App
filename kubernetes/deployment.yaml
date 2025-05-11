@@ -2,8 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: mern-app
-  labels:
-    app: mern-app
 spec:
   replicas: 2
   selector:
@@ -16,48 +14,25 @@ spec:
     spec:
       containers:
       - name: mern-app
-        image: ${DOCKER_REGISTRY}/mern-app:latest
+        image: 22i1156/mern-app:latest  # Replace with your Docker Hub username
+        imagePullPolicy: Always              # Changed to Always to pull from registry
         ports:
         - containerPort: 3000
         env:
-        - name: MONGODB_URI
+        - name: MONGO_URI
           valueFrom:
             configMapKeyRef:
               name: mern-app-config
               key: mongodb-uri
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: mern-app-config
+              key: NODE_ENV
         resources:
-          limits:
-            cpu: "500m"
-            memory: "512Mi"
           requests:
-            cpu: "200m"
+            memory: "128Mi"
+            cpu: "250m"
+          limits:
             memory: "256Mi"
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: mongodb
-  labels:
-    app: mongodb
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: mongodb
-  template:
-    metadata:
-      labels:
-        app: mongodb
-    spec:
-      containers:
-      - name: mongodb
-        image: mongo:latest
-        ports:
-        - containerPort: 27017
-        volumeMounts:
-        - name: mongo-persistent-storage
-          mountPath: /data/db
-      volumes:
-      - name: mongo-persistent-storage
-        persistentVolumeClaim:
-          claimName: mongo-pvc
+            cpu: "500m"

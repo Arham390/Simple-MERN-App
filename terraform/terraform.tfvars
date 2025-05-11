@@ -1,0 +1,9 @@
+aws_region           = "us-east-1"
+project_name         = "mern-app"
+vpc_cidr             = "10.0.0.0/16"
+public_subnet_cidrs  = ["10.0.1.0/24", "10.0.2.0/24"]
+availability_zones   = ["us-east-1a", "us-east-1b"]
+ec2_instance_type    = "t2.micro"
+ec2_ami              = "ami-0c7217cdde317cfec" # Ubuntu 22.04 LTS in us-east-1, update as needed
+ssh_public_key_path = "C:\\Users\\dell\\.ssh\\id_rsa.pub"
+ecr_repository_name  = "mern-app-repo"
