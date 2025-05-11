@@ -86,26 +86,3 @@ jobs:
           TF_VAR_instance_count: 1
           TF_VAR_instance_name: mern-app-instance
           TF_VAR_instance_ami: ami-0c55b159cbfafe1f0
-
-  deploy:
-    needs: [build]
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Apply Argo CD Application
-        env:
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-          EC2_USER: ${{ secrets.EC2_USER }}
-          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
-        run: |
-          echo "${EC2_SSH_KEY}" > ec2_key.pem
-          chmod 400 ec2_key.pem
-
-          scp -o StrictHostKeyChecking=no -i ec2_key.pem ./argocd/application.yaml $EC2_USER@$EC2_HOST:/tmp/application.yaml
-
-          ssh -o StrictHostKeyChecking=no -i ec2_key.pem $EC2_USER@$EC2_HOST << EOF
-            kubectl apply -f /tmp/application.yaml -n argocd
-          EOF
-
-          rm ec2_key.pem
