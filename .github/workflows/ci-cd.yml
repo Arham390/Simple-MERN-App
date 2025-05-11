@@ -2,9 +2,9 @@ name: CI/CD Pipeline (EC2 Free Tier)
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build:
@@ -13,83 +13,81 @@ jobs:
       ecr_registry: ${{ steps.login-ecr.outputs.registry }}
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
-        cache: 'npm'
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "npm"
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Run tests
-      run: npm test || echo "No tests specified"
+      - name: Run tests
+        run: npm test || echo "No tests specified"
 
-    - name: Login to Amazon ECR
-      id: login-ecr
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-      uses: aws-actions/amazon-ecr-login@v1
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_REGION: ${{ secrets.AWS_REGION }}
+      - name: Login to Amazon ECR
+        id: login-ecr
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: aws-actions/amazon-ecr-login@v1
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
 
-    - name: Build, tag, and push image to Amazon ECR
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-      env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: mern-app
-        IMAGE_TAG: ${{ github.sha }}
-      run: |
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+      - name: Build, tag, and push image to Amazon ECR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: mern-app
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
   terraform:
     name: Terraform Infra Check
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v2
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
 
-    - name: Terraform Init
-      working-directory: terraform
-      run: terraform init
+      - name: Terraform Init
+        working-directory: terraform
+        run: terraform init
 
-    - name: Terraform Validate
-      working-directory: terraform
-      run: terraform validate
+      - name: Terraform Validate
+        working-directory: terraform
+        run: terraform validate
 
-    - name: Terraform Plan (Dry Run Infra Check)
-      run: terraform plan -var="public_key=${{ secrets.EC2_PUBLIC_KEY }}"
-      working-directory: terraform
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_REGION: ${{ secrets.AWS_REGION }}
-        TF_VAR_aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        TF_VAR_aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        TF_VAR_aws_region: ${{ secrets.AWS_REGION }}
-        TF_VAR_public_key: ${{ secrets.EC2_PUBLIC_KEY }}
-        TF_VAR_private_key: ${{ secrets.EC2_PRIVATE_KEY }}
-        TF_VAR_instance_type: t2.micro
-        TF_VAR_ami: ami-0c55b159cbfafe1f0 # Amazon Linux 2 AMI (HVM), SSD Volume Type
-        TF_VAR_key_name: ${{ secrets.EC2_KEY_NAME }}
-        TF_VAR_security_group: ${{ secrets.EC2_SECURITY_GROUP }}
-        TF_VAR_subnet_id: ${{ secrets.EC2_SUBNET_ID }}
-        TF_VAR_vpc_id: ${{ secrets.EC2_VPC_ID }}
-        TF_VAR_instance_count: 1
-        TF_VAR_instance_name: mern-app-instance
-        TF_VAR_instance_ami: ami-0c55b159cbfafe1f0 # Amazon Linux 2 AMI (HVM), SSD Volume Type
-        
-        #ok
+      - name: Terraform Plan (Dry Run Infra Check)
+        run: terraform plan -var="public_key=${{ secrets.EC2_PUBLIC_KEY }}"
+        working-directory: terraform
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          TF_VAR_aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          TF_VAR_aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          TF_VAR_aws_region: ${{ secrets.AWS_REGION }}
+          TF_VAR_public_key: ${{ secrets.EC2_PUBLIC_KEY }}
+          TF_VAR_private_key: ${{ secrets.EC2_PRIVATE_KEY }}
+          TF_VAR_instance_type: t2.micro
+          TF_VAR_ami: ami-0c55b159cbfafe1f0
+          TF_VAR_key_name: ${{ secrets.EC2_KEY_NAME }}
+          TF_VAR_security_group: ${{ secrets.EC2_SECURITY_GROUP }}
+          TF_VAR_subnet_id: ${{ secrets.EC2_SUBNET_ID }}
+          TF_VAR_vpc_id: ${{ secrets.EC2_VPC_ID }}
+          TF_VAR_instance_count: 1
+          TF_VAR_instance_name: mern-app-instance
+          TF_VAR_instance_ami: ami-0c55b159cbfafe1f0
+
   deploy:
-    #l
     needs: [build, terraform]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -97,12 +95,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Debug SSH Variables
-        run: |
-          echo "EC2_HOST: $EC2_HOST"
-          echo "EC2_USER: $EC2_USER"
-
-      - name: Deploy to EC2 via SSH
+      - name: Deploy to EC2 via SSH and start container
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ${{ secrets.EC2_USER }}
@@ -112,12 +105,9 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
-          
         run: |
-          echo "$EC2_SSH_KEY" > ec2_key.pem
+          echo "${EC2_SSH_KEY}" > ec2_key.pem
           chmod 400 ec2_key.pem
-
-          echo "Connecting to: $EC2_USER@$EC2_HOST"
 
           ssh -o StrictHostKeyChecking=no -i ec2_key.pem "$EC2_USER@$EC2_HOST" << EOF
             docker login -u AWS -p $(aws ecr get-login-password --region $AWS_REGION) $ECR_REGISTRY
@@ -125,6 +115,21 @@ jobs:
             docker stop mern-app || true
             docker rm mern-app || true
             docker run -d --name mern-app -p 80:3000 $ECR_REGISTRY/mern-app:$IMAGE_TAG
+          EOF
+
+      - name: Apply Argo CD Application
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
+          echo "${EC2_SSH_KEY}" > ec2_key.pem
+          chmod 400 ec2_key.pem
+
+          scp -o StrictHostKeyChecking=no -i ec2_key.pem ./argocd/application.yaml $EC2_USER@$EC2_HOST:/tmp/application.yaml
+
+          ssh -o StrictHostKeyChecking=no -i ec2_key.pem $EC2_USER@$EC2_HOST << EOF
+            kubectl apply -f /tmp/application.yaml -n argocd
           EOF
 
           rm ec2_key.pem
