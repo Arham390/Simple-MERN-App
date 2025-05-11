@@ -47,10 +47,9 @@ variable "ssh_public_key_path" {
 }
 
 variable "public_key" {
-  description = "The SSH public key to use for EC2 access"
+  description = "Public SSH key for EC2"
   type        = string
 }
-
 
 variable "ecr_repository_name" {
   description = "Name of the ECR repository"
