@@ -46,8 +46,9 @@ temp/
 uploads/
 *.log
 
-# Terraform
+# Terraform - Enhanced to exclude all provider binaries
 terraform/.terraform/
+terraform/.terraform/**
 terraform/*.tfstate
 terraform/*.tfstate.*
 terraform/.terraform.lock.hcl
@@ -56,10 +57,14 @@ terraform/terraform.tfvars
 terraform/terraform.tfvars.json
 terraform/.terraform.tfstate.backup
 
+# Explicitly exclude large Terraform provider binaries
+**/.terraform/providers/**/*.exe
+
 # Misc
 *.tgz
 *.gz
 *.zip
+*.exe
 
 # TypeScript
 *.tsbuildinfo
