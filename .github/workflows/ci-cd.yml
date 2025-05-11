@@ -96,6 +96,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Debug SSH Variables
+        run: |
+          echo "EC2_HOST: $EC2_HOST"
+          echo "EC2_USER: $EC2_USER"
+
       - name: Deploy to EC2 via SSH
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
@@ -106,7 +111,7 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
-
+          
         run: |
           echo "$EC2_SSH_KEY" > ec2_key.pem
           chmod 400 ec2_key.pem
