@@ -109,7 +109,7 @@ jobs:
         
       
       run: |
-        echo "${{ secrets.EC2_SSH_KEY }}" > ec2_key.pem
+        echo -e "${{ secrets.EC2_SSH_KEY }}" > ec2_key.pem
         chmod 400 ec2_key.pem
 
         ssh -o StrictHostKeyChecking=no -i ec2_key.pem $EC2_USER@$EC2_HOST << EOF
