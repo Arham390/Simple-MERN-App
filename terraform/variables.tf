@@ -46,6 +46,10 @@ variable "ssh_public_key_path" {
   default     = "C:\\Users\\dell\\.ssh\\id_rsa.pub"
 }
 
+variable "public_key" {
+  description = "Public SSH key for EC2"
+  type        = string
+}
 
 variable "ecr_repository_name" {
   description = "Name of the ECR repository"
