@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI/CD Pipeline (EC2 Free Tier)
 
 on:
   push:
@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       ecr_registry: ${{ steps.login-ecr.outputs.registry }}
-    
+
     steps:
     - uses: actions/checkout@v3
 
@@ -47,30 +47,52 @@ jobs:
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
-  deploy:
-    needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+  terraform:
+    name: Terraform Infra Check
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v3
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
 
-    - name: Update kube config
-      run: aws eks update-kubeconfig --name mern-app-cluster --region ${{ secrets.AWS_REGION }}
+    - name: Terraform Init
+      working-directory: terraform
+      run: terraform init
 
-    - name: Deploy to EKS
+    - name: Terraform Validate
+      working-directory: terraform
+      run: terraform validate
+
+    - name: Terraform Plan (Dry Run Infra Check)
+      working-directory: terraform
+      run: terraform plan
+
+  deploy:
+    needs: [build, terraform]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Deploy to EC2 via SSH
+      env:
+        EC2_HOST: ${{ secrets.EC2_HOST }}
+        EC2_USER: ${{ secrets.EC2_USER }}
+        ECR_REGISTRY: ${{ needs.build.outputs.ecr_registry }}
+        IMAGE_TAG: ${{ github.sha }}
       run: |
-        sed -i "s|\${DOCKER_REGISTRY}|${{ needs.build.outputs.ecr_registry }}|g" kubernetes/deployment.yaml
-        kubectl apply -f kubernetes/configmap.yaml
-        kubectl apply -f kubernetes/secret.yaml
-        kubectl apply -f kubernetes/persistent-volume-claim.yaml
-        kubectl apply -f kubernetes/deployment.yaml
-        kubectl apply -f kubernetes/service.yaml
-        kubectl apply -f kubernetes/ingress.yaml
+        echo "${{ secrets.EC2_SSH_KEY }}" > ec2_key.pem
+        chmod 400 ec2_key.pem
+
+        ssh -o StrictHostKeyChecking=no -i ec2_key.pem $EC2_USER@$EC2_HOST << EOF
+          docker login -u AWS -p $(aws ecr get-login-password --region ${{ secrets.AWS_REGION }}) $ECR_REGISTRY
+          docker pull $ECR_REGISTRY/mern-app:$IMAGE_TAG
+          docker stop mern-app || true
+          docker rm mern-app || true
+          docker run -d --name mern-app -p 80:3000 $ECR_REGISTRY/mern-app:$IMAGE_TAG
+        EOF
+
+        rm ec2_key.pem
