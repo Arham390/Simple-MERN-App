@@ -87,7 +87,7 @@ jobs:
         TF_VAR_instance_name: mern-app-instance
         TF_VAR_instance_ami: ami-0c55b159cbfafe1f0 # Amazon Linux 2 AMI (HVM), SSD Volume Type
         
-        
+        #ok
   deploy:
     needs: [build, terraform]
     runs-on: ubuntu-latest
