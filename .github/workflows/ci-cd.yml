@@ -93,127 +93,32 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
+      - name: Deploy to EC2 via SSH
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+          ECR_REGISTRY: ${{ needs.build.outputs.ecr_registry }}
+          IMAGE_TAG: ${{ github.sha }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
 
-    - name: Debug environment variables
-      run: |
-        # DO NOT print secrets, just check if they're set
-        if [ -z "${{ secrets.EC2_HOST }}" ]; then echo "❌ EC2_HOST is not set"; else echo "✅ EC2_HOST is set"; fi
-        if [ -z "${{ secrets.EC2_USER }}" ]; then echo "❌ EC2_USER is not set"; else echo "✅ EC2_USER is set"; fi
-        if [ -z "${{ secrets.EC2_SSH_KEY }}" ]; then echo "❌ EC2_SSH_KEY is not set"; else echo "✅ EC2_SSH_KEY is set"; fi
-        
-        # Print the first line of the key to check format
-        echo "SSH key first line:"
-        echo "${{ secrets.EC2_SSH_KEY }}" | head -n 1
-        
-        # Hard-coded values for debugging - REPLACE THESE with your actual values
-        echo "Using hard-coded values for debugging"
-        EC2_USER="ec2-user"  # Common default for Amazon Linux or "ubuntu" for Ubuntu
-        EC2_HOST="your-ec2-instance-ip"  # Replace with your actual EC2 IP address
-        
-        echo "Will connect as $EC2_USER@$EC2_HOST"
+        run: |
+          # Write the SSH key from secrets to a PEM file
+          echo -e "${EC2_SSH_KEY}" > ec2_key.pem
+          chmod 400 ec2_key.pem
 
-    - name: Setup SSH key with proper debugging
-      run: |
-        # Create SSH directory
-        mkdir -p ~/.ssh
-        chmod 700 ~/.ssh
-        
-        # Write key file with proper contents
-        echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/ec2_key.pem
-        chmod 600 ~/.ssh/ec2_key.pem
-        
-        # Check if key file exists and has content
-        if [ -f ~/.ssh/ec2_key.pem ]; then
-          echo "✅ Key file created"
-          ls -la ~/.ssh/ec2_key.pem
-          wc -l ~/.ssh/ec2_key.pem | awk '{print "Key has " $1 " lines"}'
-        else
-          echo "❌ Key file not created properly"
-          exit 1
-        fi
-        
-        # Check if key starts with BEGIN line
-        if grep -q "BEGIN" ~/.ssh/ec2_key.pem; then
-          echo "✅ Key appears to be in correct format"
-        else
-          echo "❌ Key doesn't start with BEGIN line - may be invalid"
-          echo "First few characters:"
-          head -c 20 ~/.ssh/ec2_key.pem | cat -A
-          exit 1
-        fi
+          # Deploy to EC2 via SSH
+          ssh -o StrictHostKeyChecking=no -i ec2_key.pem $EC2_USER@$EC2_HOST << EOF
+            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+            docker pull $ECR_REGISTRY/mern-app:$IMAGE_TAG
+            docker stop mern-app || true
+            docker rm mern-app || true
+            docker run -d --name mern-app -p 80:3000 $ECR_REGISTRY/mern-app:$IMAGE_TAG
+          EOF
 
-    - name: Test SSH connection with explicit values
-      run: |
-        # IMPORTANT: Replace these with your actual values
-        EC2_USER="ec2-user"  # Change this to your actual username
-        EC2_HOST="your-ec2-ip-address"  # Change this to your actual IP address
-        
-        # Try SSH with verbose output for debugging
-        ssh -v -i ~/.ssh/ec2_key.pem -o StrictHostKeyChecking=accept-new $EC2_USER@$EC2_HOST "echo SSH connection successful"
-
-    - name: Deploy to EC2 with explicit values
-      run: |
-        # IMPORTANT: Replace these with your actual values
-        EC2_USER="ec2-user"  # Change this to your actual username
-        EC2_HOST="your-ec2-ip-address"  # Change this to your actual IP address
-        ECR_REGISTRY="${{ needs.build.outputs.ecr_registry }}"
-        IMAGE_TAG="${{ github.sha }}"
-        
-        ssh -i ~/.ssh/ec2_key.pem -o StrictHostKeyChecking=accept-new $EC2_USER@$EC2_HOST << 'ENDSSH'
-          # Install AWS CLI if not present
-          if ! command -v aws &> /dev/null; then
-            echo "Installing AWS CLI..."
-            sudo apt-get update
-            sudo apt-get install -y awscli || sudo yum install -y awscli
-          fi
-
-          # Configure AWS credentials
-          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws configure set region ${{ secrets.AWS_REGION }}
-          
-          # Login to ECR
-          echo "Logging into ECR..."
-          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
-          
-          # Pull the latest image
-          echo "Pulling image..."
-          docker pull ${ECR_REGISTRY}/mern-app:${IMAGE_TAG}
-          
-          # Stop and remove existing container if any
-          echo "Stopping old container..."
-          docker stop mern-app 2>/dev/null || true
-          docker rm mern-app 2>/dev/null || true
-          
-          # Run the new container
-          echo "Starting new container..."
-          docker run -d \
-            --name mern-app \
-            -p 80:3000 \
-            --restart always \
-            -e NODE_ENV=production \
-            ${ECR_REGISTRY}/mern-app:${IMAGE_TAG}
-            
-          # Verify container is running
-          echo "Verifying deployment..."
-          sleep 5
-          if docker ps | grep -q mern-app; then
-            echo "✅ Deployment successful!"
-          else
-            echo "❌ Deployment failed!"
-            docker logs mern-app
-            exit 1
-          fi
-        ENDSSH
-
-    - name: Cleanup
-      if: always()
-      run: rm -f ~/.ssh/ec2_key.pem
+          # Clean up the key
+          rm ec2_key.pem
