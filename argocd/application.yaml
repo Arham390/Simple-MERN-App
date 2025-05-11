@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: 'https://github.com/your-username/your-repo.git'
+    repoURL: 'https://github.com/Arham390/Simple-MERN-App'
     targetRevision: main
     path: k8s-manifests/mern-app
   destination:
